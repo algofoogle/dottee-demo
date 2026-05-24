@@ -21,3 +21,7 @@ It repeats after about 68 seconds.
 
 *   [Tiny VGA PMOD](https://github.com/mole99/tiny-vga) for driving a VGA monitor.
 *   [TT Audio PMOD](https://github.com/MichaelBell/tt-audio-pmod) for mono sound.
+
+## Attribution
+
+By all means feel free to build upon this project with your own work, but please credit me (Anton Maurovic, <https://github.com/algofoogle>, <https://foogle.com/anton>) as the original author.

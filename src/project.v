@@ -19,7 +19,7 @@
 // `define SPIN_LOGO
 // `define SIMPLE_LOGO_REVEAL
 
-// `define HSLIDE_ANIM
+`define HSLIDE_ANIM
 
 module tt_um_algofoogle_dottee(
   input  wire [7:0] ui_in,    // Dedicated inputs
@@ -47,6 +47,8 @@ module tt_um_algofoogle_dottee(
     .clk(clk),
     .rst_n(rst_n),
     .frame_counter(frame_counter),
+    .h(h),
+    .v(v),
     .sample_clk(line_end),
     .dac_out(dac_out),
     .sample_out(sample_out)

@@ -15,6 +15,8 @@ module audio #(
     input clk,
     input rst_n,
     input [11:0] frame_counter,
+    input [9:0] h,
+    input [9:0] v,
     input sample_clk,
     output dac_out,
     output [B-1:0] sample_out
@@ -277,9 +279,41 @@ module audio #(
         musbar<8    ?   (tr_map(phase2)>>>1) :
         musbar<12   ?   (sq_map(phase2)>>>cross_decay) + (tr_map(phase2)>>>~cross_decay) :
                         (sq_map(phase2)>>>cross_decay) + (tr_map(phase2)>>>((~cross_decay[2:1])));
-    // Average mixing of the two samples:
-    wire signed [B:0] mixer = voice1 + voice2;
-    wire signed [B-1:0] sample = mixer[B:1];
+
+    wire [B-1:0] t = frame_counter[B-1:0];
+
+    reg [9:0] b;
+    reg [3:0] a; // Attenuation.
+    always @(*) begin
+        a = 0;
+        b = 0;
+        if (frame_counter[5:2]==4'b0000) begin
+            // Drum:
+            b = (v>>(5+frame_counter[2:1]));
+            a = frame_counter[2:0]; // Attenuation.
+        end else if (frame_counter[3:2]==2'b00) begin
+            // Hi-hat (longer tail):
+            b = v;
+            a = (frame_counter[4] && musbar<6) ? 4'b1111 : (frame_counter[2:0]+1); // Attenuation.
+        end
+    end
+    
+    wire [B-1:0] noise = ({b[7],1'b0,b[1],1'b0,b[2],1'b0} + (b<<t[1:0]) - (b[8:3]>>t[1:0])) ^ (b+t) ^ t;  //(h ^ v) + {B{t[0]}};
+
+    wire [5:0] nn = noise + {noise,1'b0};
+
+    wire nn2 = nn >= 32;
+
+    wire [B-1:0] drums = ({6{nn2}}>>a);
+
+    wire drums_en = (musbar>=3);
+    wire v2_amp = (musbar<8); // voice2 is louder only for the 1st half of the music. Avoids clipping and sounds better in general.
+
+    wire signed [B+1:0] mixer = 
+        drums_en ?  ((voice1<<1) + (voice2<<v2_amp) + $signed({drums})) :
+                    ((voice1<<1) + (voice2<<1));
+                    
+    wire signed [B-1:0] sample = mixer[B+1:2];
     assign sample_out = sample;
 
     sigmadelta_dac #(.B(B)) dac(
