@@ -15,6 +15,7 @@
 // `define DEBUG_TSTART  ( 2*60)
 // `define DEBUG_TSTOP   (20*60) 
 // `define DEBUG_SLOW    5
+// `define DEBUG_FRAME_ADVANCE
 
 // `define SPIN_LOGO
 // `define SIMPLE_LOGO_REVEAL
@@ -369,6 +370,11 @@ module tt_um_algofoogle_dottee(
 
   assign {R,G,B} = (!video_active) ? 6'b00_00_00 : rgb_unblanked;
 
+`ifdef DEBUG_FRAME_ADVANCE
+  wire [7:0] frame_advance_factor = ui_in;
+`else
+  wire [7:0] frame_advance_factor = 8'd1;
+`endif//DEBUG_FRAME_ADVANCE
 
 `ifdef DEBUG_SLOW
   reg [3:0] debug_slow;
@@ -400,7 +406,7 @@ module tt_um_algofoogle_dottee(
         `endif
       `endif
     end else begin
-      frame_counter_base <= frame_counter_base + 1;
+      frame_counter_base <= frame_counter_base + {4'b0000,frame_advance_factor};
     end
 
 `ifdef DEBUG_SLOW
