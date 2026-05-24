@@ -106,7 +106,7 @@ module tt_um_algofoogle_dottee(
   // Basic frame counter source:
   reg [11:0] frame_counter_base; // 4096 frames ~= 68 seconds.
   // Frame counter (with optional offset) as used by all logic:
-  wire [11:0] frame_counter = frame_counter_base + {ui_in,4'b0000};
+  wire [11:0] frame_counter = frame_counter_base;// + {ui_in,4'b0000};
   wire [9:0] counter = en_counter ? frame_counter[9:0] : 0;
 
   hvsync_generator hvsync_gen(
