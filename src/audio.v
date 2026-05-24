@@ -16,7 +16,8 @@ module audio #(
     input rst_n,
     input [11:0] frame_counter,
     input sample_clk,
-    output dac_out
+    output dac_out,
+    output [B-1:0] sample_out
 );
 
     // Tuning based on G1=59.94Hz (making it possible for us to tune based on VSYNC):
@@ -270,7 +271,7 @@ module audio #(
     // wire [2:0] decay = frame_counter[3:1]; // Sort of pan pipe effect at Q5.9 when decay is only fc[1:0].
     // wire [2:0] cross_decay = {3{frame_counter[6]}} ^ frame_counter[5:3];
 
-    wire signed [B-1:0] voice1 = decayed_sample(tr_map(phase1), decay);
+    wire signed [B-1:0] voice1 = (pinc==0) ? 0 : decayed_sample(tr_map(phase1), decay);
     wire signed [B-1:0] voice2 =
         (~p2en)     ?   0 :
         musbar<8    ?   (tr_map(phase2)>>>1) :
@@ -279,6 +280,7 @@ module audio #(
     // Average mixing of the two samples:
     wire signed [B:0] mixer = voice1 + voice2;
     wire signed [B-1:0] sample = mixer[B:1];
+    assign sample_out = sample;
 
     sigmadelta_dac #(.B(B)) dac(
         .clk(clk),

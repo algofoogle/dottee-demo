@@ -41,12 +41,15 @@ module tt_um_algofoogle_dottee(
 
   wire line_end;
 
+  wire [AUDIO_BITS-1:0] sample_out;
+
   audio #(.B(AUDIO_BITS), .SUB(AUDIO_SUB)) synth (
     .clk(clk),
     .rst_n(rst_n),
     .frame_counter(frame_counter),
     .sample_clk(line_end),
-    .dac_out(dac_out)
+    .dac_out(dac_out),
+    .sample_out(sample_out)
   );
 
   // VGA signals
