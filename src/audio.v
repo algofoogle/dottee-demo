@@ -5,6 +5,8 @@
 
 `default_nettype none
 
+// `define OCTAVE_DOWN 1
+
 module audio #(
     parameter B = 5, // Internal bit depth of audio samples. 10 excellent. 8 good. 6 some harmonics. 5 workable. 4 just passable. 3 gritty.
     parameter SUB = 9, // Sub-resolution of the voice phase accumulator. 1+B+SUB is the total phase bit depth: Larger gives more tonal precision. 1+4+8 is minimum.
@@ -102,9 +104,14 @@ module audio #(
             NB:     note_map = PGs  <<  (oct+1);
             default:note_map = 0;
             endcase
+`ifdef OCTAVE_DOWN
+            note_map = note_map >> `OCTAVE_DOWN;
+`endif//OCTAVE_DOWN
         end
     endfunction
 
+    // The whole demo is made up of 16 musical bars:
+    wire [3:0] musbar = frame_counter[11:8];
 
 
     // Phase increment (frequency factor) chosen for the notes we want:
@@ -121,7 +128,7 @@ module audio #(
         endcase
 
         // Then add 3 more beats for the next 2 bars:
-        if (frame_counter[11:8]>0) begin
+        if (musbar>0) begin
             casez(frame_counter[6:3])
             // 0..5
             4'd6:       pinc = note_map(NC,     1);
@@ -133,7 +140,7 @@ module audio #(
         end
 
         // Then add other flourishes after that:
-        if (frame_counter[11:8]>1) begin
+        if (musbar>1) begin
             casez(frame_counter[6:3])
             // 0
             4'd1:       pinc = note_map(NC,     2);
@@ -154,7 +161,7 @@ module audio #(
             endcase
         end
 
-        if (frame_counter[11:8]<12 || frame_counter[1])
+        if (musbar<12 || frame_counter[1])
             pinc = pinc << 1; // Bump up an extra octave in the early bars.
     end
 
@@ -164,7 +171,7 @@ module audio #(
     always @(*) begin
         p2 = 0;
         p2en = 0;
-        if (frame_counter[11:8]>=4) begin
+        if (musbar>=4) begin
             p2en = 1;
             casez(frame_counter[9:6])
             4'd0:   p2 = note_map(NC, 0);
@@ -189,11 +196,11 @@ module audio #(
         if (p2 != 0)
             p2 = p2 + {{B+SUB{1'b0}}, frame_counter[2]}; // Vibrato.
 
-        if (frame_counter[11:8]<8) begin
+        if (musbar<8) begin
             if (frame_counter[4]) begin
                 p2 >>= 1;
             end
-        end else if (frame_counter[11:8]<12) begin
+        end else if (musbar<12) begin
             if (frame_counter[6]) begin
                 p2 >>= 1;
             end
@@ -265,12 +272,10 @@ module audio #(
 
     wire signed [B-1:0] voice1 = decayed_sample(tr_map(phase1), decay);
     wire signed [B-1:0] voice2 =
-        (~p2en)                 ?   0 :
-        frame_counter[11:8]<8   ?   (tr_map(phase2)>>>1) :
-        frame_counter[11:8]<12  ?   
-                                    (sq_map(phase2)>>>cross_decay) + (tr_map(phase2)>>>~cross_decay)
-                                  : (sq_map(phase2)>>>cross_decay) + (tr_map(phase2)>>>((~cross_decay[2:1])))
-                                    ;
+        (~p2en)     ?   0 :
+        musbar<8    ?   (tr_map(phase2)>>>1) :
+        musbar<12   ?   (sq_map(phase2)>>>cross_decay) + (tr_map(phase2)>>>~cross_decay) :
+                        (sq_map(phase2)>>>cross_decay) + (tr_map(phase2)>>>((~cross_decay[2:1])));
     // Average mixing of the two samples:
     wire signed [B:0] mixer = voice1 + voice2;
     wire signed [B-1:0] sample = mixer[B:1];
