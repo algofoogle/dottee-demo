@@ -19,6 +19,7 @@
 // `define SPIN_LOGO
 // `define SIMPLE_LOGO_REVEAL
 
+// `define HSLIDE_ANIM
 
 module tt_um_algofoogle_dottee(
   input  wire [7:0] ui_in,    // Dedicated inputs
@@ -307,10 +308,16 @@ module tt_um_algofoogle_dottee(
 
   // wire altgem = (gem_mode == 4) && (max_radius >= 32);
 
-  // wire [9:0] hslide = (&frame_counter[11:10]) ? (frame_counter[9:2] ^ {6{vlut[0]}}) : 0;
+`ifdef HSLIDE_ANIM
+  wire [9:0] hslide = (&frame_counter[11:10]) ? (frame_counter[9:2] ^ {6{vlut[0]}}) : 0;
+`endif//HSLIDE_ANIM
 
   gems #(.DOTBITS(DOTBITS)) gems1(
-    .h( (hstagger ? h+(1<<(DOTBITS-1)) : h)),// + hslide),
+`ifdef HSLIDE_ANIM
+    .h( (hstagger ? h+(1<<(DOTBITS-1)) : h) + hslide),
+`else
+    .h( (hstagger ? h+(1<<(DOTBITS-1)) : h)),
+`endif//HSLIDE_ANIM
     .v(v+counter),
     .counter(logo_revealed ? ~(counter+256) : 0), // Start animating dots after the logo has been fully-revealed.
     // .fmode(15),
