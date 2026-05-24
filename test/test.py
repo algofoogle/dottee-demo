@@ -78,6 +78,8 @@ async def test_frames(dut):
 
     dds = open(f"frames_out/audio_stream.bin", "wb")
 
+    debug_ui_in = 0
+
     for frame in range(frame_count):
         render_start_time = time.time()
 
@@ -91,7 +93,11 @@ async def test_frames(dut):
 
         for n in range(vrange): # 525 lines * however many frames in frame_count
             dds.flush()
-            print(f"Rendering line {n} of frame {frame}")
+            debug_frame_number = frame+(debug_ui_in<<4)
+            print(
+                f"Rendering line {n} of frame {frame} "
+                f"(ui_in=0x{debug_ui_in:02X}: {debug_frame_number}=0x{debug_frame_number:02X})"
+            )
             for n in range(int(hrange*hres)): # 800 pixel clocks per line.
                 speaker = dut.speaker.value
                 sc = str(speaker).lower()
@@ -127,11 +133,29 @@ async def test_frames(dut):
                     rr = int(dut.rr.value)
                     gg = int(dut.gg.value)
                     bb = int(dut.bb.value)
-                    hsyncb = 255 if str(dut.hsync_n.value).lower()=='x' else (0==dut.hsync_n.value)*0b110000
-                    vsyncb = 128 if str(dut.vsync_n.value).lower()=='x' else (0==dut.vsync_n.value)*0b110000
-                    r = (rr << 6) | hsyncb
-                    g = (gg << 6) | vsyncb
-                    b = (bb << 6)
+                    hsyncb = 255 if str(dut.hsync_n.value).lower()=='x' else (0==dut.hsync_n.value)*0b01111000
+                    vsyncb = 128 if str(dut.vsync_n.value).lower()=='x' else (0==dut.vsync_n.value)*0b01111000
+                    r = (rr << 6) | (rr << 4) | (rr << 2) | (rr) | hsyncb
+                    g = (gg << 6) | (gg << 4) | (gg << 2) | (gg) | vsyncb
+                    b = (bb << 6) | (bb << 4) | (bb << 2) | (bb)
+                    if vsyncb != 0 and vsyncb != 128:
+                        # Starting VSYNC (end of frame update stage)...
+                        # Every 2nd frame, we advance the frame debug index:
+                        fdi = (frame+1) >> 3 # SHR for 8 frames per section.
+                        if fdi == 1:
+                            debug_ui_in = 0x20
+                        elif fdi == 2:
+                            debug_ui_in = 0x21
+                        elif fdi == 3:
+                            debug_ui_in = 0x22
+                        elif fdi == 4:
+                            debug_ui_in = 0x3F
+                        elif fdi == 5:
+                            debug_ui_in = 0x40
+                        elif fdi == 6:
+                            debug_ui_in = 0xC0
+                        elif fdi >= 7:
+                            debug_ui_in = (0x50 + ((fdi-7)<<4)) & 0xFF
                 sample_count += 1
                 if 'x' in (str(dut.rgb.value) + str(dut.hsync_n.value) + str(dut.vsync_n.value)).lower():
                     x_count += 1
@@ -142,6 +166,7 @@ async def test_frames(dut):
                     await ClockCycles(dut.clk, 1) 
                 else:
                     await Timer(CLOCK_PERIOD/hres, unit='ns')
+                dut.ui_in.value = debug_ui_in
         img.close()
         render_stop_time = time.time()
         delta = render_stop_time - render_start_time
@@ -149,7 +174,5 @@ async def test_frames(dut):
     dds.close()
     print("Waiting 1 more clock, for start of next line...")
     await ClockCycles(dut.clk, 1)
-
-    # await toggler
 
     print(f"DONE: Out of {sample_count} pixels/samples, got: {x_count} 'x'; {z_count} 'z' -- Out of {total_audio_bits} audio bits, got: {audio_x} 'x'; {audio_z} 'z'")

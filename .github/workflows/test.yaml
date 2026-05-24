@@ -25,7 +25,7 @@ jobs:
 
       - name: Run tests
         env:
-          FRAMES: 1 # Limit frames, so it doesn't take too long.
+          FRAMES: 32 # Limit frames, so it doesn't take too long.
         run: |
           cd test
           make clean
