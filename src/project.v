@@ -338,7 +338,7 @@ module tt_um_algofoogle_dottee(
   wire debug_gem_mode_p = gem_mode[~h[4:3]]; // "Pixels" are 8-wide and there's 4 of them.
 `endif//DEBUG_GEM_MODE_UI
 
-  wire [5:0] rgb_unblanked = 
+  wire [5:0] rgb_unblanked =
 `ifdef DEBUG_DAC
     (h>=10'd544) ? {2'b00,{2{dac_out}}, 2'b00} :
 `endif
@@ -363,7 +363,7 @@ module tt_um_algofoogle_dottee(
     if (~rst_n) begin
       `ifdef DEBUG_TSTART
       frame_counter <= `DEBUG_TSTART;
-      `else      
+      `else
       frame_counter <= 0;
       `endif
 
