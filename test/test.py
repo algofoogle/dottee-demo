@@ -56,6 +56,8 @@ async def test_frames(dut):
     clk = Clock(dut.clk, CLOCK_PERIOD, unit="ns")
     cocotb.start_soon(clk.start())
 
+    dut.ui_in.value = 0
+
     # Wait 3 clocks...
     await ClockCycles(dut.clk, 3)
     dut._log.info("Assert reset...")
