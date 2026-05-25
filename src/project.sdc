@@ -82,11 +82,13 @@ if { [info exists ::env(OPENLANE_SDC_IDEAL_CLOCKS)] && $::env(OPENLANE_SDC_IDEAL
 }
 
 
-# #ANTON: This specifies that STA should assume outputs are ALWAYS
-# # registered. We might still choose to test it with unregistered
-# # outputs, but if it doesn't work: no worries. Registered is still best :)
-# set_case_analysis 1 [get_ports {ui_in[6]}]
-
 #ANTON: Assume ui_in never change (since they're only used for debug
 # and otherwise make STA much harder):
-set_case_analysis 0 [get_ports {ui_in[*]}]
+set_case_analysis 0 [get_ports {ui_in[0]}]
+set_case_analysis 0 [get_ports {ui_in[1]}]
+set_case_analysis 0 [get_ports {ui_in[2]}]
+set_case_analysis 0 [get_ports {ui_in[3]}]
+set_case_analysis 0 [get_ports {ui_in[4]}]
+set_case_analysis 0 [get_ports {ui_in[5]}]
+set_case_analysis 0 [get_ports {ui_in[6]}]
+set_case_analysis 0 [get_ports {ui_in[7]}]
