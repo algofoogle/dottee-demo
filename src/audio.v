@@ -6,6 +6,12 @@
 `default_nettype none
 
 // `define OCTAVE_DOWN 1
+// `define OCTAVE_UP 1
+// `define ORIGINAL_TUNING // Kinda requires OCTAVE_UP=1
+
+`ifndef OCTAVE_UP
+`define OCTAVE_UP 0
+`endif//OCTAVE_UP
 
 module audio #(
     parameter B = 5, // Internal bit depth of audio samples. 10 excellent. 8 good. 6 some harmonics. 5 workable. 4 just passable. 3 gritty.
@@ -79,32 +85,34 @@ module audio #(
         input signed [2:0] oct;
         begin
             case (note)
-            // NC:     note_map = PC   <<  oct;
-            // NCs:    note_map = PCs  <<  oct;
-            // ND:     note_map = PD   <<  oct;
-            // NDs:    note_map = PDs  <<  oct;
-            // NE:     note_map = PE   <<  oct;
-            // NF:     note_map = PF   <<  oct;
-            // NFs:    note_map = PFs  <<  oct;
-            // NG:     note_map = PG   <<  oct;
-            // NGs:    note_map = PGs  <<  oct;
-            // NA:     note_map = PA   <<  oct;
-            // NAs:    note_map = PAs  <<  oct;
-            // NB:     note_map = PB   <<  oct;
-
+`ifdef ORIGINAL_TUNING
+            NC:     note_map = PC   <<  (oct+`OCTAVE_UP);
+            NCs:    note_map = PCs  <<  (oct+`OCTAVE_UP);
+            ND:     note_map = PD   <<  (oct+`OCTAVE_UP);
+            NDs:    note_map = PDs  <<  (oct+`OCTAVE_UP);
+            NE:     note_map = PE   <<  (oct+`OCTAVE_UP);
+            NF:     note_map = PF   <<  (oct+`OCTAVE_UP);
+            NFs:    note_map = PFs  <<  (oct+`OCTAVE_UP);
+            NG:     note_map = PG   <<  (oct+`OCTAVE_UP);
+            NGs:    note_map = PGs  <<  (oct+`OCTAVE_UP);
+            NA:     note_map = PA   <<  (oct+`OCTAVE_UP);
+            NAs:    note_map = PAs  <<  (oct+`OCTAVE_UP);
+            NB:     note_map = PB   <<  (oct+`OCTAVE_UP);
+`else
             // Notes are remapped here to be closer to A440 tuning:
-            NC:     note_map = PA   <<  (oct+0);
-            NCs:    note_map = PAs  <<  (oct+0);
-            ND:     note_map = PB   <<  (oct+0);
-            NDs:    note_map = PC   <<  (oct+1);
-            NE:     note_map = PCs  <<  (oct+1);
-            NF:     note_map = PD   <<  (oct+1);
-            NFs:    note_map = PDs  <<  (oct+1);
-            NG:     note_map = PE   <<  (oct+1);
-            NGs:    note_map = PF   <<  (oct+1);
-            NA:     note_map = PFs  <<  (oct+1);
-            NAs:    note_map = PG   <<  (oct+1);
-            NB:     note_map = PGs  <<  (oct+1);
+            NC:     note_map = PA   <<  (oct+0+`OCTAVE_UP);
+            NCs:    note_map = PAs  <<  (oct+0+`OCTAVE_UP);
+            ND:     note_map = PB   <<  (oct+0+`OCTAVE_UP);
+            NDs:    note_map = PC   <<  (oct+1+`OCTAVE_UP);
+            NE:     note_map = PCs  <<  (oct+1+`OCTAVE_UP);
+            NF:     note_map = PD   <<  (oct+1+`OCTAVE_UP);
+            NFs:    note_map = PDs  <<  (oct+1+`OCTAVE_UP);
+            NG:     note_map = PE   <<  (oct+1+`OCTAVE_UP);
+            NGs:    note_map = PF   <<  (oct+1+`OCTAVE_UP);
+            NA:     note_map = PFs  <<  (oct+1+`OCTAVE_UP);
+            NAs:    note_map = PG   <<  (oct+1+`OCTAVE_UP);
+            NB:     note_map = PGs  <<  (oct+1+`OCTAVE_UP);
+`endif
             default:note_map = 0;
             endcase
 `ifdef OCTAVE_DOWN
@@ -270,8 +278,6 @@ module audio #(
     // Exponential attenuation factor:
     wire [2:0] decay = frame_counter[3:1]; // Sort of pan pipe effect at Q5.9 when decay is only fc[1:0].
     wire [2:0] cross_decay = {3{frame_counter[6]}} ^ frame_counter[5:3];
-    // wire [2:0] decay = frame_counter[3:1]; // Sort of pan pipe effect at Q5.9 when decay is only fc[1:0].
-    // wire [2:0] cross_decay = {3{frame_counter[6]}} ^ frame_counter[5:3];
 
     wire signed [B-1:0] voice1 = (pinc==0) ? 0 : decayed_sample(tr_map(phase1), decay);
     wire signed [B-1:0] voice2 =

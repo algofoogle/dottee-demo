@@ -2,6 +2,8 @@
 
 # DOTTEE: A Tiny Tapeout Demoscene project
 
+![DOTTEE screenshot social preview](./docs/social-preview.png)
+
 This is a tiny Verilog-based demoscene project generating a VGA digital RGB222 display and PDM audio output.
 
 - [Read the documentation for project](docs/info.md)
@@ -11,6 +13,7 @@ It was originally created for fabrication on an ASIC as part of the [Tiny Tapeou
 ## Versions
 
 *   [Original version submitted to ttsky26a](https://app.tinytapeout.com/projects/4259) was from a different repo, [algofoogle/ttsky26a-demoscene-dottee](https://github.com/algofoogle/ttsky26a-demoscene-dottee), commit [`4bf41a1`](https://github.com/algofoogle/ttsky26a-demoscene-dottee/commit/4bf41a170cc7a892566b205456cebf2d75d91f09).
+*   Enhanced version for TTGF26a. Adds synth noise (for drum/hat), `ui_in` used for debug, sliding rows in last section. Also has a minor audio clicks fix.
 
 
 ## What is Tiny Tapeout?

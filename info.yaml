@@ -1,10 +1,10 @@
 
 # Tiny Tapeout project information
 project:
-  title:        "DOTTEE VGA demo"
+  title:        "DOTTEE VGA demo (TTGF26a)"
   author:       "algofoogle (Anton Maurovic)"
   discord:      "algofoogle"
-  description:  "DOTTEE: A pretty little demo for TTSKY26a"
+  description:  "DOTTEE: Pretty little 1-tile Tiny Tapeout ASIC demo (TTGF26a version)"
   language:     Verilog
   clock_hz:     25_175_000       # Clock frequency in Hz (or 0 if not applicable)
 
@@ -22,8 +22,8 @@ project:
     - project.v
     - hvsync_generator.v
 
-# The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
-# This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
+# The pinout of your project. Leave unused pins blank.
+# This section is for the datasheet/website.
 pinout:
   # Inputs
   ui[0]: "debug[0]"
